@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(150), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
     role = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default='active')
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -23,6 +24,9 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return '<User {}>'.format(self.username)
 
 class Department(db.Model):
     __tablename__ = 'department'
@@ -37,9 +41,9 @@ class Doctor(db.Model):
     __tablename__ = 'doctor'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    specialization = db.Column(db.String(64))
+    # specialization = db.Column(db.String(64))
     department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), nullable=True)
-    bio = db.Column(db.Text)
+    # bio = db.Column(db.Text)
 
     user = db.relationship('User', back_populates='doctors', passive_deletes=True)
     department = db.relationship('Department', back_populates='doctors', passive_deletes=True)

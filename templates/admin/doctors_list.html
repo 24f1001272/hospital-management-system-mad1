@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h2 class="h4 m-0">Doctors</h2>
+  <a class="btn btn-sm btn-primary" href="{{ url_for('admin.doctor_new') }}">Add Doctor</a>
+</div>
+<form class="row g-2 mb-3">
+  <div class="col-sm-6 col-md-4"><input class="form-control" type="text" name="q" value="{{ q }}" placeholder="Search name or department"></div>
+  <div class="col-auto"><button class="btn btn-outline-secondary">Search</button></div>
+  <div class="col-auto"><a class="btn btn-outline-dark" href="{{ url_for('admin.doctors_list') }}">Clear</a></div>
+</form>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+  <table class="table table-striped table-hover align-middle mb-0">
+    <thead class="table-light"><tr><th>Name</th><th>Email</th><th>Phone</th><th>Department</th><th>Active</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for d in doctors %}
+        <tr>
+          <td>{{ d['full_name'] }}</td>
+          <td>{{ d['email'] }}</td>
+          <td>{{ d['phone'] or '' }}</td>
+          <td>{{ d['department'] or '' }}</td>
+          <td>
+            {% if d['active'] %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-secondary">No</span>{% endif %}
+          </td>
+          <td class="text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('admin.doctor_edit', doctor_id=d['id']) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin.doctor_delete', doctor_id=d['id']) }}" class="d-inline" onsubmit="return confirm('Delete this doctor?')">
+              <button class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

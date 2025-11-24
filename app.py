@@ -1,6 +1,7 @@
 from flask import Flask
 from common import db, login_manager
-from models import User
+from models import User, Department
+from routes import home, auth, admin, doctor, patient
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlite3 import Connection as SQLite3Connection
@@ -24,12 +25,27 @@ def create_app():
     with app.app_context():
         db.create_all()
         if not User.query.filter_by(role='admin').first():
-            admin = User(username='admin', email='admin@hospital.com', role='admin', name='Hospital Admin')
-            admin.set_password('adminpass')
-            db.session.add(admin)
+            admin_ = User(username='admin', email='admin@hospital.com', role='admin', name='Hospital Admin')
+            admin_.set_password('adminpass')
+            db.session.add(admin_)
+            db.session.commit()
+        if not Department.query.first():
+            departments = [
+                Department(name='Neurology', description='Brain and nervous system treatments'),
+                Department(name='Cardiology', description='Heart related treatments'),
+                Department(name='Gastroenterology', description='Digestive system related treatments'),
+                Department(name='Oncology', description='Cancer treatments'),
+            ]
+            db.session.bulk_save_objects(departments)
             db.session.commit()
 
     login_manager.init_app(app)
+
+    app.register_blueprint(home.bp)
+    app.register_blueprint(auth.bp)
+    app.register_blueprint(admin.bp)
+    app.register_blueprint(doctor.bp)
+    app.register_blueprint(patient.bp)
 
     return app
 

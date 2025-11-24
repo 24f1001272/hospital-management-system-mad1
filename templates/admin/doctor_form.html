@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h4 mb-4">{{ 'New Doctor' if mode=='new' else 'Edit Doctor' }}</h2>
+        <form method="post" class="needs-validation" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="full_name" name="full_name" value="{{ doc['full_name'] if doc else '' }}" placeholder="Full Name" required>
+                <label for="full_name">Full Name</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="email" class="form-control" id="email" name="email" value="{{ doc['email'] if doc else '' }}" placeholder="Email" required>
+                <label for="email">Email</label>
+              </div>  
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="user" name="user" value="{{ doc['user'] if doc else '' }}" placeholder="User Name" required>
+                <label for="user">User Name</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ doc['phone'] if doc else '' }}" placeholder="Phone">
+                <label for="phone">Phone</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <select class="form-control" id="department" name="department" value="{{ doc['department'] if doc else '' }}" placeholder="Department" required>
+                    <option value="{{ doc['department'] if doc else 'd' }}">{{ doc['department'] if doc else 'Department' }}</option>
+                    {% for d in departments %}
+                    <option value="{{ d.name }}">{{ d.name }}</option>
+                    {% endfor %}
+                </select>
+              </div>
+            </div>
+            {% if mode=='new' %}
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="password" name="password" placeholder="Password" required>
+                <label for="password">Password</label>
+              </div>
+            </div>
+            {% else %}
+            <div class="col-md-2 d-flex align-items-center">
+              <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="active" id="active" {% if doc and doc['active'] %}checked{% endif %}>
+                <label class="form-check-label" for="active">Active</label>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2 mt-4">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-secondary" href="{{ url_for('admin.doctors_list') }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
