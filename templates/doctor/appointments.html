@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2 class="h4 mb-3">My Appointments</h2>
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Patient</th>
+          <th>Status</th>
+          <th>Update</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in appts %}
+        <tr>
+          <td>{{ a['date'] }}</td>
+          <td>{{ a['time'] }}</td>
+          <td>{{ a['patient_name'] }}</td>
+          <td>{{ a['status'] }}</td>
+          <td>
+            <a class="btn btn-sm btn-primary {% if a['status'] == 'Cancelled' %}disabled{% endif %}"
+              href="{{ url_for('doctor.treatment', appt_id=a['id']) }}">Add
+              Treatment</a>
+          </td>
+          <td class="text-nowrap">
+            <form method="post" action="{{ url_for('doctor.update_status', appt_id=a['id']) }}" class="d-inline">
+              <input type="hidden" name="status" value="Completed">
+              <button class="btn btn-sm btn-success" {% if a['status'] in ['Completed', 'Cancelled' ] %}disabled{% endif %}>Mark as
+                Complete</button>
+            </form>
+            <form method="post" action="{{ url_for('doctor.update_status', appt_id=a['id']) }}" class="d-inline ms-1">
+              <input type="hidden" name="status" value="Cancelled">
+              <button class="btn btn-sm btn-danger" {% if a['status'] in ['Completed', 'Cancelled' ] %}disabled{% endif
+                %}>Cancel</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not appts %}
+    <p class="text-muted text-center m-3">No appointments available.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

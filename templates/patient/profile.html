@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h4 mb-4">My Profile</h2>
+        <form method="post" class="needs-validation" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.name }}"
+                  placeholder="Full Name" required>
+                <label for="full_name">Full Name</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-floating">
+                <input type="email" class="form-control" id="email" value="{{ user.email }}" placeholder="Email">
+                <label for="email">Email</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}"
+                  placeholder="Phone">
+                <label for="phone">Phone</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="date" class="form-control" id="dob" name="dob"
+                  value="{{ patient.dob if patient and patient.dob else '' }}" placeholder="Date of Birth">
+                <label for="dob">Date of Birth</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <select class="form-select" id="gender" name="gender">
+                  <option value="">Select Gender</option>
+                  <option value="Male" {% if patient and patient.gender=='Male' %}selected{% endif %}>Male</option>
+                  <option value="Female" {% if patient and patient.gender=='Female' %}selected{% endif %}>Female
+                  </option>
+                  <option value="Other" {% if patient and patient.gender=='Other' %}selected{% endif %}>Other</option>
+                </select>
+                <label for="gender">Gender</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-floating">
+                <select class="form-select" id="blood_group" name="blood_group">
+                  <option value="">Select Blood Group</option>
+                  {% for bg in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                  <option value="{{ bg }}" {% if patient and patient.blood_group==bg %}selected{% endif %}>{{ bg }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <label for="blood_group">Blood Group</label>
+              </div>
+            </div>
+          </div>
+          <div class="d-grid d-sm-flex gap-2 mt-4">
+            <button class="btn btn-primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

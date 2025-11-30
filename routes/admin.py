@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models import User, Doctor, Patient, Appointment, Department
+from models import User, Doctor, Patient, Appointment, Department, Treatment
 from functools import wraps
 from sqlalchemy.orm import aliased
 from common import db
+from datetime import date
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -30,6 +31,7 @@ def dashboard():
         .join(p_user, Patient.user_id == p_user.id)
         .join(Doctor, Appointment.doctor_id == Doctor.id)
         .join(d_user, Doctor.user_id == d_user.id)
+        .filter(Appointment.date >= date.today())
         .order_by(Appointment.date, Appointment.time)
         .limit(10)
         .all()
@@ -42,10 +44,13 @@ def dashboard():
             'patient_name': patient_name,
             'doctor_name': doctor_name,
             'status': appt.status,
+            'patient_id': appt.patient_id,
+            'doctor_id': appt.doctor_id,
+            'department': appt.doctor.department.name if appt.doctor.department else 'N/A'
         })
     return render_template('admin/dashboard.html', doctors=doctors, patients=patients, appointments=len(appts), appts=appts)
 
-# Doctors CRUD (ORM-based)
+# Doctors
 @bp.route('/doctors')
 @login_required
 @admin_required
@@ -63,13 +68,10 @@ def doctors_list():
         user = doc.user
         doctors.append({
             'id': doc.id,
-            # 'user_id': user.id,
-            # 'user': user.username,
             'full_name': user.name,
             'email': user.email,
             'phone': user.phone,
             'department': doc.department.name if doc.department else 'N/A',
-            # 'specialization': doc.specialization,
             'active' : user.status == 'active'
         })
     return render_template('admin/doctors_list.html', doctors=doctors, q=q)
@@ -85,7 +87,7 @@ def doctor_new():
         username = request.form['user'].strip()
         phone = request.form.get('phone','').strip()
         department = request.form.get('department').strip()
-        password = request.form.get('password','doctor123')
+        password = request.form.get('password')
         if (not(full_name or email or username or password) or department not in [d.name for d in departments]):
             flash('Please fill all required fields.','warning')
         else:
@@ -96,7 +98,8 @@ def doctor_new():
                 db.session.flush()
 
                 department_id = next((d.id for d in departments if d.name == department), None)
-                doctor = Doctor(user_id=user.id, department_id=department_id)
+                info = request.form.get('info', '')
+                doctor = Doctor(user_id=user.id, department_id=department_id, info=info)
                 db.session.add(doctor)
                 db.session.commit()
                 flash('Doctor created.','success')
@@ -119,34 +122,32 @@ def doctor_edit(doctor_id):
     if request.method == 'POST':
         full_name = request.form['full_name'].strip()
         email = request.form['email'].strip().lower()
-        username = request.form['user'].strip()
         phone = request.form.get('phone','').strip()
         department = request.form.get('department').strip()
-        if (full_name == "" or email == "" or username == "") or department not in [d.name for d in departments]:
+        if (full_name == "" or email == "") or department not in [d.name for d in departments]:
             flash('Please fill all required fields.','warning')
             return redirect(url_for('admin.doctor_edit', doctor_id=doctor_id))
         try:
             user.name = full_name
             user.email = email
-            user.username = username
             user.phone = phone
             user.status = 'active' if request.form.get('active') == 'on' else 'inactive'
             doc.department_id = next((d.id for d in departments if d.name == department), None)
+            doc.info = request.form.get('info', '')
             db.session.commit()
             flash('Doctor updated.','success')
             return redirect(url_for('admin.doctors_list'))
         except Exception as e:
             db.session.rollback()
             flash('Error: '+str(e),'danger')
-    # pass a simple dict for templates expecting user fields
     doc_info = {
         'id': doc.id,
         'user_id': user.id,
-        'user': user.username,
         'full_name': user.name,
         'email': user.email,
         'phone': user.phone,
         'department': doc.department.name if doc.department else 'N/A',
+        'info': doc.info,
         'active' : user.status == 'active'
     }
     return render_template('admin/doctor_form.html', mode='edit', doc=doc_info, departments = departments)
@@ -169,7 +170,7 @@ def doctor_delete(doctor_id):
         flash('Error: '+str(e),'danger')
     return redirect(url_for('admin.doctors_list'))
 
-# Patients CRUD (ORM-based)
+# Patients
 @bp.route('/patients')
 @login_required
 @admin_required
@@ -196,33 +197,6 @@ def patients_list():
         })
     return render_template('admin/patients_list.html', patients=patients, q=q)
 
-# @bp.route('/patients/new', methods=['GET','POST'])
-# @login_required
-# @admin_required
-# def patient_new():
-#     if request.method == 'POST':
-#         full_name = request.form['full_name'].strip()
-#         email = request.form['email'].strip().lower()
-#         phone = request.form.get('phone','').strip()
-#         password = request.form.get('password','patient123')
-#         if not full_name or not email:
-#             flash('Name and email are required.','warning')
-#         else:
-#             try:
-#                 user = User(username=email, email=email, name=full_name, phone=phone, role='patient')
-#                 user.set_password(password)
-#                 db.session.add(user)
-#                 db.session.flush()
-#                 patient = Patient(user_id=user.id)
-#                 db.session.add(patient)
-#                 db.session.commit()
-#                 flash('Patient created.','success')
-#                 return redirect(url_for('admin.patients_list'))
-#             except Exception as e:
-#                 db.session.rollback()
-#                 flash('Error: '+str(e),'danger')
-#     return render_template('admin/patient_form.html', mode='new', pat=None)
-
 @bp.route('/patients/<int:patient_id>/edit', methods=['GET','POST'])
 @login_required
 @admin_required
@@ -235,16 +209,25 @@ def patient_edit(patient_id):
     if request.method == 'POST':
         full_name = request.form['full_name'].strip()
         email = request.form['email'].strip().lower()
+        dob_str = request.form.get('dob')
+        gender = request.form.get('gender').strip()
+        blood_group = request.form.get('blood_group').strip()
         phone = request.form.get('phone','').strip()
+
         if (full_name == "" or email == ""):
             flash('Please fill all required fields.','warning')
             return redirect(url_for('admin.patient_edit', patient_id=patient_id))
         try:
             user.name = full_name
             user.email = email
-            user.username = email
             user.phone = phone
             user.status = 'active' if request.form.get('active') == 'on' else 'inactive'
+            
+            if dob_str:
+                pat.dob = date.fromisoformat(dob_str)
+            pat.gender = gender
+            pat.blood_group = blood_group
+
             db.session.commit()
             flash('Patient updated.','success')
             return redirect(url_for('admin.patients_list'))
@@ -257,6 +240,9 @@ def patient_edit(patient_id):
         'full_name': user.name,
         'email': user.email,
         'phone': user.phone,
+        'dob': pat.dob,
+        'gender': pat.gender,
+        'blood_group': pat.blood_group,
         'active' : user.status == 'active'
     }
     return render_template('admin/patient_form.html', pat=pat_info)
@@ -279,7 +265,28 @@ def patient_delete(patient_id):
         flash('Error: '+str(e),'danger')
     return redirect(url_for('admin.patients_list'))
 
-# Appointments list (ORM-based)
+@bp.route('/patient_history/<int:patient_id>/<int:doctor_id>')
+@login_required
+@admin_required
+def patient_history(patient_id, doctor_id):
+    patient = Patient.query.get_or_404(patient_id)
+    doctor = Doctor.query.get_or_404(doctor_id)
+    
+    treatments = Treatment.query.filter_by(patient_id=patient_id, doctor_id=doctor_id).order_by(Treatment.created_at).all()
+    
+    history = []
+    for i, t in enumerate(treatments, 1):
+        history.append({
+            'visit_no': i,
+            'visit_type': t.visit_type,
+            'tests_done': t.tests_done,
+            'diagnosis': t.diagnosis,
+            'medicines': t.medicines
+        })
+        
+    return render_template('admin/patient_history.html', patient=patient, doctor=doctor, history=history)
+
+# Appointments
 @bp.route('/appointments')
 @login_required
 @admin_required
@@ -304,6 +311,9 @@ def appointments():
             'patient_name': patient_name,
             'doctor_name': doctor_name,
             'status': appt.status,
-            'reason': appt.reason
+            'reason': appt.reason,
+            'patient_id': appt.patient_id,
+            'doctor_id': appt.doctor_id,
+            'department': appt.doctor.department.name if appt.doctor.department else 'N/A'
         })
     return render_template('admin/appointments.html', appts=appts)

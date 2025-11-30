@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h2 class="h4 m-0">Doctor Dashboard</h2>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header">Upcoming (next 7 days)</div>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Patient</th>
+          <th>Status</th>
+          <th>Update</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr>
+          <td>{{ a.date }}</td>
+          <td>{{ a.time }}</td>
+          <td>{{ a.patient.user.name }}</td>
+          <td>{{ a.status }}</td>
+          <td>
+            <a class="btn btn-sm btn-primary {% if a.status == 'Cancelled' %}disabled{% endif %}"
+              href="{{ url_for('doctor.treatment', appt_id=a.id) }}">Add Treatment</a>
+          </td>
+          <td class="text-nowrap">
+            <form method="post" action="{{ url_for('doctor.update_status', appt_id=a.id) }}" class="d-inline">
+              <input type="hidden" name="status" value="Completed">
+              <button class="btn btn-sm btn-success" {% if a.status=='Cancelled' %}disabled{% endif %}>Mark as
+                Complete</button>
+            </form>
+            <form method="post" action="{{ url_for('doctor.update_status', appt_id=a.id) }}" class="d-inline ms-1">
+              <input type="hidden" name="status" value="Cancelled">
+              <button class="btn btn-sm btn-danger" {% if a.status in ['Completed', 'Cancelled' ] %}disabled{% endif
+                %}>Cancel</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not appointments %}
+    <p class="text-muted text-center m-3">No appointments available.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header">Patients</div>
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Patient Name</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in assigned_patients %}
+        <tr>
+          <td>{{ p['full_name'] }}</td>
+          <td>
+            <a class="btn btn-sm btn-outline-primary"
+              href="{{ url_for('doctor.patient_history', patient_id=p['id']) }}">View</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not assigned_patients %}
+    <p class="text-muted text-center m-3">No patient assigned.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

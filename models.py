@@ -41,9 +41,8 @@ class Doctor(db.Model):
     __tablename__ = 'doctor'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    # specialization = db.Column(db.String(64))
     department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), nullable=True)
-    # bio = db.Column(db.Text)
+    info = db.Column(db.Text)
 
     user = db.relationship('User', back_populates='doctors', passive_deletes=True)
     department = db.relationship('Department', back_populates='doctors', passive_deletes=True)
@@ -102,7 +101,9 @@ class Treatment(db.Model):
     doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id', ondelete='CASCADE'), nullable=False)
     patient_id = db.Column(db.Integer, db.ForeignKey('patient.id', ondelete='CASCADE'), nullable=False)
     diagnosis = db.Column(db.Text)
-    prescription = db.Column(db.Text)
+    medicines = db.Column(db.Text)
+    tests_done = db.Column(db.Text)
+    visit_type = db.Column(db.String(50), default='In-person')
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 

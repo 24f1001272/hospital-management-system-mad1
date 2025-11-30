@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h2 class="h4 m-0">Welcome {{ current_user.name }}</h2>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header color_pink text_color">
+            <h5 class="m-0">Departments</h5>
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush">
+                {% for d in departments %}
+                <li class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    <span class="fs-5">{{ d.name }}</span>
+                    <a href="{{ url_for('patient.department_details', dept_id=d.id) }}"
+                        class="btn btn-outline-primary btn-sm rounded-pill px-4">view details</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="m-0">Upcoming Appointments</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sr No.</th>
+                        <th>Doctor Name</th>
+                        <th>Department</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in upcoming %}
+                    <tr>
+                        <td>{{ loop.index }}.</td>
+                        <td>Dr. {{ a.doctor.user.name }}</td>
+                        <td>{{ a.doctor.department.name if a.doctor.department else 'General' }}</td>
+                        <td>{{ a.date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ a.time.strftime('%I:%M %p') }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('patient.doctor_availability', doctor_id=a.doctor.id, reschedule_id=a.id) }}"
+                                    class="btn btn-outline-warning btn-sm rounded-pill px-3">Reschedule</a>
+                                <form action="{{ url_for('patient.cancel_appointment', appt_id=a.id) }}" method="post">
+                                    <button type="submit"
+                                        class="btn btn-outline-danger btn-sm rounded-pill px-3">Cancel</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-3 text-muted">No upcoming appointments.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -9,52 +9,83 @@
           <div class="row g-3">
             <div class="col-md-6">
               <div class="form-floating">
-                <input type="text" class="form-control" id="full_name" name="full_name" value="{{ doc['full_name'] if doc else '' }}" placeholder="Full Name" required>
-                <label for="full_name">Full Name</label>
+                <input type="text" class="form-control" id="full_name" name="full_name"
+                  value="{{ doc['full_name'] if doc else '' }}" placeholder="Full Name" required>
+                <label for="full_name">Full Name*</label>
               </div>
             </div>
             <div class="col-md-6">
               <div class="form-floating">
-                <input type="email" class="form-control" id="email" name="email" value="{{ doc['email'] if doc else '' }}" placeholder="Email" required>
-                <label for="email">Email</label>
-              </div>  
-            </div>
-            <div class="col-md-4">
-              <div class="form-floating">
-                <input type="text" class="form-control" id="user" name="user" value="{{ doc['user'] if doc else '' }}" placeholder="User Name" required>
-                <label for="user">User Name</label>
+                <input type="email" class="form-control" id="email" name="email"
+                  value="{{ doc['email'] if doc else '' }}" placeholder="Email" required>
+                <label for="email">Email*</label>
               </div>
             </div>
+            {% if mode=='new' %}
             <div class="col-md-4">
               <div class="form-floating">
-                <input type="text" class="form-control" id="phone" name="phone" value="{{ doc['phone'] if doc else '' }}" placeholder="Phone">
+                <input type="text" class="form-control" id="user" name="user" value="{{ doc['user'] if doc else '' }}"
+                  placeholder="User Name" required>
+                <label for="user">User Name*</label>
+              </div>
+            </div>
+            {% endif %}
+            <div class="col-md-4">
+              <div class="form-floating">
+                <input type="text" class="form-control" id="phone" name="phone"
+                  value="{{ doc['phone'] if doc else '' }}" placeholder="Phone">
                 <label for="phone">Phone</label>
               </div>
             </div>
             <div class="col-md-4">
               <div class="form-floating">
-                <select class="form-control" id="department" name="department" value="{{ doc['department'] if doc else '' }}" placeholder="Department" required>
-                    <option value="{{ doc['department'] if doc else 'd' }}">{{ doc['department'] if doc else 'Department' }}</option>
-                    {% for d in departments %}
-                    <option value="{{ d.name }}">{{ d.name }}</option>
-                    {% endfor %}
+                <select class="form-select" id="department" name="department" required>
+                  <option value="">Select Department</option>
+                  {% for d in departments %}
+                  <option value="{{ d.name }}" {% if doc and doc['department'] == d.name %}selected{% endif %}>{{ d.name }}</option>
+                  {% endfor %}
                 </select>
+                <label for="department">Department*</label>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-floating">
+                <textarea class="form-control" id="info" name="info" placeholder="Doctor Info"
+                  style="height: 100px">{{ doc['info'] if doc and doc['info'] else '' }}</textarea>
+                <label for="info">Doctor Info</label>
               </div>
             </div>
             {% if mode=='new' %}
             <div class="col-md-4">
               <div class="form-floating">
                 <input type="text" class="form-control" id="password" name="password" placeholder="Password" required>
-                <label for="password">Password</label>
+                <label for="password">Password*</label>
               </div>
             </div>
             {% else %}
             <div class="col-md-2 d-flex align-items-center">
-              <div class="form-check mt-2">
-                <input class="form-check-input" type="checkbox" name="active" id="active" {% if doc and doc['active'] %}checked{% endif %}>
-                <label class="form-check-label" for="active">Active</label>
-              </div>
+              <input type="hidden" name="active" id="active_input" value="{{ 'on' if doc and doc['active'] else '' }}">
+              <button type="button"
+                class="btn {{ 'btn-success' if doc and doc['active'] else 'btn-danger' }} w-100 mt-2" id="active_btn"
+                onclick="toggleActive()">
+                {{ 'Active' if doc and doc['active'] else 'Inactive' }}
+              </button>
             </div>
+            <script>
+              function toggleActive() {
+                const input = document.getElementById('active_input');
+                const btn = document.getElementById('active_btn');
+                if (input.value === 'on') {
+                  input.value = '';
+                  btn.textContent = 'Inactive';
+                  btn.classList.replace('btn-success', 'btn-danger');
+                } else {
+                  input.value = 'on';
+                  btn.textContent = 'Active';
+                  btn.classList.replace('btn-danger', 'btn-success');
+                }
+              }
+            </script>
             {% endif %}
           </div>
           <div class="d-flex gap-2 mt-4">

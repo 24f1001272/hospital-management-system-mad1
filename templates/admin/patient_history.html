@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 m-0">Patient History</h2>
+        <a href="javascript:history.back()" class="btn btn-outline-primary rounded-pill px-4">back</a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <p class="mb-1"><strong>Patient Name:</strong> {{ patient.user.name }}</p>
+            <p class="mb-1"><strong>Doctors' Name:</strong> Dr. {{ doctor.user.name }}</p>
+            <p class="mb-0"><strong>Department:</strong> {{ doctor.department.name if doctor.department else 'General'
+                }}</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Visit No.</th>
+                        <th>Visit Type</th>
+                        <th>Tests Done</th>
+                        <th>Diagnosis</th>
+                        <th>Medicines</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr>
+                        <td>{{ h.visit_no }}.</td>
+                        <td>{{ h.visit_type }}</td>
+                        <td>{{ h.tests_done or '-' }}</td>
+                        <td>{{ h.diagnosis or '-' }}</td>
+                        <td>{{ h.medicines or '-' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-3 text-muted">No history found for this patient with this
+                            doctor.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header color_pink text_color">
+            <h5 class="m-0">Doctor's Availability</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('patient.book_slot', doctor_id=doctor.id) }}">
+                {% if reschedule_id %}
+                <input type="hidden" name="reschedule_id" value="{{ reschedule_id }}">
+                <div class="alert alert-info">Rescheduling Appointment</div>
+                {% endif %}
+                <div class="row">
+                    <div class="col-md-3 border-end">
+                        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist"
+                            aria-orientation="vertical">
+                            {% for date_obj in dates %}
+                            <button class="nav-link {{ 'active' if loop.first else '' }} text-start mb-2 border"
+                                id="v-pills-{{ loop.index }}-tab" data-bs-toggle="pill"
+                                data-bs-target="#v-pills-{{ loop.index }}" type="button" role="tab"
+                                aria-controls="v-pills-{{ loop.index }}"
+                                aria-selected="{{ 'true' if loop.first else 'false' }}">
+                                {{ date_obj.strftime('%d/%m/%Y') }}
+                            </button>
+                            {% else %}
+                            <p class="text-muted text-center mt-3">No availability found.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="tab-content" id="v-pills-tabContent">
+                            {% for date_obj in dates %}
+                            <div class="tab-pane fade {{ 'show active' if loop.first else '' }}"
+                                id="v-pills-{{ loop.index }}" role="tabpanel"
+                                aria-labelledby="v-pills-{{ loop.index }}-tab">
+                                <div class="d-flex flex-wrap gap-3">
+                                    {% set slots_for_date = slots_by_date.get(date_obj, []) %}
+                                    {% if slots_for_date %}
+                                    {% for slot in slots_for_date %}
+                                    <div class="form-check">
+                                        <input class="form-check-input btn-check" type="radio" name="selected_slot"
+                                            id="slot-{{ date_obj }}-{{ loop.index }}"
+                                            value="{{ date_obj }}|{{ slot.time_slot }}" required>
+                                        <label class="btn btn-outline-success"
+                                            for="slot-{{ date_obj }}-{{ loop.index }}">
+                                            {{ slot_labels.get(slot.time_slot, slot.time_slot) }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                    {% else %}
+                                    <p class="text-muted">No slots available for this date.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% if dates %}
+                <div class="mt-4">
+                    <label for="reason" class="form-label">Reason for Visit</label>
+                    <textarea class="form-control" id="reason" name="reason" rows="3"
+                        placeholder="Please briefly describe your symptoms or reason for visit..."></textarea>
+                </div>
+                <div class="mt-4 text-end">
+                    <button type="submit" class="btn btn-success rounded-pill px-4">book</button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

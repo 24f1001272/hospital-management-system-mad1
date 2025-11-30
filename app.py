@@ -24,19 +24,20 @@ def create_app():
     
     with app.app_context():
         db.create_all()
+        if not Department.query.first():
+            departments = [
+                Department(name='Neurology', description='The Neurology Department specializes in the diagnosis and treatment of disorders of the nervous system, including the brain, spinal cord, nerves, and muscles. Our team of experts handles conditions such as stroke, epilepsy, multiple sclerosis, and Parkinson\'s disease.'),
+                Department(name='Cardiology', description='The Cardiology Department provides comprehensive care for heart and vascular conditions. From preventative screenings to advanced surgical interventions, our cardiologists are dedicated to maintaining your heart health.'),
+                Department(name='Gastroenterology', description='The Gastroenterology Department focuses on the digestive system and its disorders. We offer advanced diagnostic and therapeutic procedures for conditions affecting the esophagus, stomach, intestines, liver, and pancreas.'),
+                Department(name='Oncology', description='The Oncology Department is dedicated to the diagnosis, treatment, and care of patients with cancer. It houses a team of specialized doctors, such as medical oncologists, surgical oncologists, and radiation oncologists, who work together to provide comprehensive cancer care.'),
+            ]
+            db.session.bulk_save_objects(departments)
+            db.session.commit()
+            
         if not User.query.filter_by(role='admin').first():
             admin_ = User(username='admin', email='admin@hospital.com', role='admin', name='Hospital Admin')
             admin_.set_password('adminpass')
             db.session.add(admin_)
-            db.session.commit()
-        if not Department.query.first():
-            departments = [
-                Department(name='Neurology', description='Brain and nervous system treatments'),
-                Department(name='Cardiology', description='Heart related treatments'),
-                Department(name='Gastroenterology', description='Digestive system related treatments'),
-                Department(name='Oncology', description='Cancer treatments'),
-            ]
-            db.session.bulk_save_objects(departments)
             db.session.commit()
 
     login_manager.init_app(app)

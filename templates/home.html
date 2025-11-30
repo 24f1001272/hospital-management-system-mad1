@@ -7,8 +7,6 @@
     <hr class="my-4">
     {% if not current_user.is_authenticated %}
     <p>Please login or register to continue.</p>
-    <a class="btn btn-primary btn-lg" href="{{ url_for('auth.login') }}" role="button">Login</a>
-    <a class="btn btn-success btn-lg" href="{{ url_for('auth.register') }}" role="button">Register as Patient</a>
     {% else %}
     <p>You are logged in as {{ current_user.role }}.</p>
     {% endif %}
